@@ -2,18 +2,23 @@ import { useEffect, useState } from 'react'
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
+const formatPrice = (value) => {
+  const n = Number(value || 0)
+  try { return n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) } catch { return `€ ${n.toFixed(2)}` }
+}
+
 function Header() {
   return (
     <header className="relative z-10 w-full py-6">
       <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 shadow-lg ring-2 ring-white/30" />
-          <span className="text-xl font-bold text-white">Noël 3D Shop</span>
+          <span className="text-xl font-bold text-white">Boutique Noël 3D</span>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-white/80">
-          <a href="#produtos" className="hover:text-white transition">Produtos</a>
-          <a href="#sobre" className="hover:text-white transition">Sobre</a>
-          <a href="#contato" className="hover:text-white transition">Contato</a>
+          <a href="#produits" className="hover:text-white transition">Produits</a>
+          <a href="#a-propos" className="hover:text-white transition">À propos</a>
+          <a href="#contact" className="hover:text-white transition">Contact</a>
         </nav>
       </div>
     </header>
@@ -34,14 +39,14 @@ function Hero() {
         <div className="grid md:grid-cols-2 items-center gap-10">
           <div className="text-white">
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-[0_2px_0_rgba(0,0,0,0.2)]">
-              Cena 3D fofa para a sua loja de Natal
+              Une scène 3D douce et craquante pour votre boutique de Noël
             </h1>
             <p className="mt-4 text-white/90 text-lg">
-              Produtos em estilo clay/soft 3D com cores vibrantes e clima acolhedor. Deixe seu Natal mais mágico e divertido.
+              Des produits au style clay/soft 3D avec des couleurs vives et une ambiance chaleureuse. Rendez votre Noël encore plus magique.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a href="#produtos" className="px-5 py-3 rounded-xl bg-white text-rose-600 font-semibold shadow-md hover:shadow-lg transition">Ver produtos</a>
-              <a href="#contato" className="px-5 py-3 rounded-xl bg-rose-100/20 text-white border border-white/30 font-semibold hover:bg-rose-100/30 transition">Fale com a gente</a>
+              <a href="#produits" className="px-5 py-3 rounded-xl bg-white text-rose-600 font-semibold shadow-md hover:shadow-lg transition">Voir les produits</a>
+              <a href="#contact" className="px-5 py-3 rounded-xl bg-rose-100/20 text-white border border-white/30 font-semibold hover:bg-rose-100/30 transition">Nous contacter</a>
             </div>
           </div>
 
@@ -110,8 +115,8 @@ function ProductCard({ title, price, description }) {
       <div className="mt-4">
         <h3 className="font-semibold text-slate-800">{title}</h3>
         {description && <p className="text-sm text-slate-500 line-clamp-2">{description}</p>}
-        <p className="text-rose-600 font-bold mt-1">R$ {Number(price).toFixed(2)}</p>
-        <button className="mt-3 w-full rounded-xl bg-rose-600 text-white py-2 font-medium hover:bg-rose-700 transition">Comprar</button>
+        <p className="text-rose-600 font-bold mt-1">{formatPrice(price)}</p>
+        <button className="mt-3 w-full rounded-xl bg-rose-600 text-white py-2 font-medium hover:bg-rose-700 transition">Acheter</button>
       </div>
     </div>
   )
@@ -125,16 +130,16 @@ function Products({ onManage }) {
     try {
       const res = await fetch(`${backendUrl}/api/products`)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Erro ao carregar produtos')
+      if (!res.ok) throw new Error(data.detail || 'Erreur lors du chargement des produits')
       setItems(data)
     } catch (e) {
       setItems([
-        { id: 'demo1', title: 'Boneco fofo com gorro', price: 59.9, description: 'Companheiro natalino em estilo clay.' },
-        { id: 'demo2', title: 'Árvore 3D mini', price: 79.9, description: 'Decoração compacta e charmosa.' },
-        { id: 'demo3', title: 'Kit enfeites redondos', price: 39.9, description: 'Conjunto de bolas com acabamento soft.' },
-        { id: 'demo4', title: 'Bengalas doces', price: 19.9, description: 'Clássico para completar sua decoração.' },
-        { id: 'demo5', title: 'Meias natalinas', price: 29.9, description: 'Para presentinhos e mimos.' },
-        { id: 'demo6', title: 'Estrelas douradas', price: 24.9, description: 'Brilho delicado para sua árvore.' },
+        { id: 'demo1', title: 'Bonhomme mignon avec bonnet', price: 59.9, description: 'Compagnon de Noël au style clay.' },
+        { id: 'demo2', title: 'Mini sapin 3D', price: 79.9, description: 'Décoration compacte et charmante.' },
+        { id: 'demo3', title: 'Kit de boules rondes', price: 39.9, description: 'Ensemble d’ornements finition soft.' },
+        { id: 'demo4', title: 'Cannes de sucre', price: 19.9, description: 'Classique pour compléter votre déco.' },
+        { id: 'demo5', title: 'Chaussettes de Noël', price: 29.9, description: 'Parfaites pour de petites surprises.' },
+        { id: 'demo6', title: 'Étoiles dorées', price: 24.9, description: 'Une touche d’éclat pour votre sapin.' },
       ])
     } finally {
       setLoading(false)
@@ -144,14 +149,14 @@ function Products({ onManage }) {
   useEffect(() => { load() }, [])
 
   return (
-    <section id="produtos" className="relative bg-white py-16">
+    <section id="produits" className="relative bg-white py-16">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex items-end justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Produtos em destaque</h2>
-          <button onClick={() => onManage?.()} className="text-rose-600 font-medium hover:underline">Área do lojista</button>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Produits en vedette</h2>
+          <button onClick={() => onManage?.()} className="text-rose-600 font-medium hover:underline">Espace commerçant</button>
         </div>
         {loading ? (
-          <p className="text-slate-600">Carregando...</p>
+          <p className="text-slate-600">Chargement…</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {items.map((it) => (
@@ -170,7 +175,7 @@ function AdminPanel({ open, onClose }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Geral', in_stock: true })
+  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Général', in_stock: true })
   const [msg, setMsg] = useState(null)
 
   const PASSCODE = 'natal2024'
@@ -192,12 +197,12 @@ function AdminPanel({ open, onClose }) {
 
   const startEdit = (item) => {
     setEditing(item)
-    setForm({ title: item.title || '', description: item.description || '', price: item.price ?? '', category: item.category || 'Geral', in_stock: item.in_stock ?? true })
+    setForm({ title: item.title || '', description: item.description || '', price: item.price ?? '', category: item.category || 'Général', in_stock: item.in_stock ?? true })
   }
 
   const resetForm = () => {
     setEditing(null)
-    setForm({ title: '', description: '', price: '', category: 'Geral', in_stock: true })
+    setForm({ title: '', description: '', price: '', category: 'Général', in_stock: true })
   }
 
   const save = async (e) => {
@@ -216,8 +221,8 @@ function AdminPanel({ open, onClose }) {
         })
       }
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Erro ao salvar')
-      setMsg({ type: 'success', text: 'Salvo com sucesso' })
+      if (!res.ok) throw new Error(data.detail || 'Erreur lors de l’enregistrement')
+      setMsg({ type: 'success', text: 'Enregistré avec succès' })
       await load()
       resetForm()
     } catch (err) {
@@ -226,11 +231,11 @@ function AdminPanel({ open, onClose }) {
   }
 
   const removeItem = async (id) => {
-    if (!confirm('Remover este produto?')) return
+    if (!confirm('Supprimer ce produit ?')) return
     try {
       const res = await fetch(`${backendUrl}/api/products/${id}`, { method: 'DELETE' })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.detail || 'Erro ao remover')
+      if (!res.ok) throw new Error(data.detail || 'Erreur lors de la suppression')
       await load()
     } catch (err) {
       setMsg({ type: 'error', text: err.message })
@@ -244,46 +249,46 @@ function AdminPanel({ open, onClose }) {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full md:w-[900px] max-h-[90vh] overflow-auto rounded-t-2xl md:rounded-2xl bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">Área do lojista</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">Fechar</button>
+          <h3 className="text-lg font-bold">Espace commerçant</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">Fermer</button>
         </div>
 
         {!unlocked ? (
           <div className="mt-6 flex items-center gap-3">
-            <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Digite a chave" className="w-full md:w-64 rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
-            <button onClick={()=> setUnlocked(code === PASSCODE)} className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">Entrar</button>
-            {code && code !== PASSCODE && <span className="text-sm text-rose-600">Chave incorreta</span>}
+            <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Entrez la clé d’accès" className="w-full md:w-64 rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+            <button onClick={()=> setUnlocked(code === PASSCODE)} className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">Entrer</button>
+            {code && code !== PASSCODE && <span className="text-sm text-rose-600">Clé incorrecte</span>}
           </div>
         ) : (
           <div className="mt-6 grid md:grid-cols-2 gap-6">
             <form onSubmit={save} className="border border-rose-100 rounded-xl p-4">
-              <h4 className="font-semibold mb-3">{editing ? 'Editar produto' : 'Novo produto'}</h4>
+              <h4 className="font-semibold mb-3">{editing ? 'Modifier le produit' : 'Nouveau produit'}</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Título</label>
+                  <label className="block text-sm font-medium text-slate-700">Titre</label>
                   <input value={form.title} onChange={e=>setForm(f=>({...f, title: e.target.value}))} required className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Descrição</label>
+                  <label className="block text-sm font-medium text-slate-700">Description</label>
                   <textarea rows="3" value={form.description} onChange={e=>setForm(f=>({...f, description: e.target.value}))} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Preço (R$)</label>
+                    <label className="block text-sm font-medium text-slate-700">Prix (€)</label>
                     <input type="number" step="0.01" value={form.price} onChange={e=>setForm(f=>({...f, price: e.target.value}))} required className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Categoria</label>
+                    <label className="block text-sm font-medium text-slate-700">Catégorie</label>
                     <input value={form.category} onChange={e=>setForm(f=>({...f, category: e.target.value}))} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
                   </div>
                 </div>
                 <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                   <input type="checkbox" checked={form.in_stock} onChange={e=>setForm(f=>({...f, in_stock: e.target.checked}))} />
-                  Em estoque
+                  En stock
                 </label>
                 <div className="flex gap-3">
-                  <button className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">{editing ? 'Salvar alterações' : 'Adicionar'}</button>
-                  {editing && <button type="button" onClick={resetForm} className="px-4 py-2 rounded-xl border border-slate-200">Cancelar</button>}
+                  <button className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">{editing ? 'Enregistrer les modifications' : 'Ajouter'}</button>
+                  {editing && <button type="button" onClick={resetForm} className="px-4 py-2 rounded-xl border border-slate-200">Annuler</button>}
                 </div>
                 {msg && <p className={`text-sm ${msg.type==='success'?'text-emerald-600':'text-rose-600'}`}>{msg.text}</p>}
               </div>
@@ -291,21 +296,21 @@ function AdminPanel({ open, onClose }) {
 
             <div className="border border-rose-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold">Seus produtos</h4>
-                <button onClick={load} className="text-sm text-rose-600 hover:underline">Atualizar</button>
+                <h4 className="font-semibold">Vos produits</h4>
+                <button onClick={load} className="text-sm text-rose-600 hover:underline">Actualiser</button>
               </div>
-              {loading ? <p className="text-slate-600">Carregando...</p> : (
+              {loading ? <p className="text-slate-600">Chargement…</p> : (
                 <ul className="divide-y">
                   {items.map((it)=> (
                     <li key={it.id} className="py-3 flex items-center justify-between gap-3">
                       <div>
                         <p className="font-medium text-slate-800">{it.title}</p>
-                        <p className="text-sm text-slate-500">R$ {Number(it.price).toFixed(2)} • {it.category || 'Geral'} {it.in_stock ? '' : '• (fora de estoque)'}
+                        <p className="text-sm text-slate-500">{formatPrice(it.price)} • {it.category || 'Général'} {it.in_stock ? '' : '• (rupture de stock)'}
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={()=>startEdit(it)} className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm">Editar</button>
-                        <button onClick={()=>removeItem(it.id)} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm">Excluir</button>
+                        <button onClick={()=>startEdit(it)} className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm">Éditer</button>
+                        <button onClick={()=>removeItem(it.id)} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm">Supprimer</button>
                       </div>
                     </li>
                   ))}
@@ -340,8 +345,8 @@ function Contact() {
         body: JSON.stringify(form)
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Erro ao enviar')
-      setStatus({ type: 'success', msg: 'Enviado com sucesso! Entraremos em contato.' })
+      if (!res.ok) throw new Error(data.detail || 'Erreur lors de l’envoi')
+      setStatus({ type: 'success', msg: 'Message envoyé ! Nous vous contacterons très bientôt.' })
       setForm({ name: '', email: '', phone: '', message: '' })
     } catch (err) {
       setStatus({ type: 'error', msg: err.message })
@@ -351,23 +356,23 @@ function Contact() {
   }
 
   return (
-    <section id="contato" className="relative bg-gradient-to-br from-emerald-50 to-rose-50 py-16">
+    <section id="contact" className="relative bg-gradient-to-br from-emerald-50 to-rose-50 py-16">
       <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-10 items-center">
         <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Fale com a gente</h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Contactez-nous</h2>
           <p className="mt-3 text-slate-600">
-            Precisa de um orçamento personalizado ou quer tirar dúvidas? Envie seu e-mail e número que retornamos rapidinho.
+            Besoin d’un devis personnalisé ou de plus d’informations ? Laissez votre e-mail et votre numéro, nous revenons vers vous rapidement.
           </p>
           <ul className="mt-6 space-y-2 text-slate-700">
-            <li>• Produtos 3D com tema natalino</li>
-            <li>• Envio rápido e suporte atencioso</li>
-            <li>• Pagamento seguro</li>
+            <li>• Produits 3D à thème de Noël</li>
+            <li>• Expédition rapide et support attentionné</li>
+            <li>• Paiement sécurisé</li>
           </ul>
         </div>
         <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-xl border border-rose-100">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Nome</label>
+              <label className="block text-sm font-medium text-slate-700">Nom</label>
               <input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
             </div>
             <div>
@@ -375,16 +380,16 @@ function Contact() {
               <input name="email" type="email" required value={form.email} onChange={handleChange} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Telefone/WhatsApp</label>
+              <label className="block text-sm font-medium text-slate-700">Téléphone/WhatsApp</label>
               <input name="phone" value={form.phone} onChange={handleChange} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700">Mensagem</label>
+              <label className="block text-sm font-medium text-slate-700">Message</label>
               <textarea name="message" rows="3" value={form.message} onChange={handleChange} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
             </div>
           </div>
           <button disabled={loading} className="mt-4 w-full rounded-xl bg-rose-600 text-white py-3 font-semibold hover:bg-rose-700 transition disabled:opacity-60">
-            {loading ? 'Enviando...' : 'Enviar contato'}
+            {loading ? 'Envoi…' : 'Envoyer'}
           </button>
           {status && (
             <p className={`mt-3 text-sm ${status.type === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -404,12 +409,12 @@ function Footer() {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600" />
-            <span className="font-semibold">Noël 3D Shop</span>
+            <span className="font-semibold">Boutique Noël 3D</span>
           </div>
-          <p className="mt-2 text-sm text-white/70">Produtos 3D fofos para um Natal mágico.</p>
+          <p className="mt-2 text-sm text-white/70">Des produits 3D adorables pour un Noël magique.</p>
         </div>
         <div className="text-sm">
-          <p>© {new Date().getFullYear()} Noël 3D Shop. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Boutique Noël 3D. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
@@ -420,6 +425,7 @@ function App() {
   const [adminOpen, setAdminOpen] = useState(false)
   return (
     <div className="min-h-screen bg-slate-900">
+      <Header />
       <Hero />
       <Products onManage={() => setAdminOpen(true)} />
       <Contact />
