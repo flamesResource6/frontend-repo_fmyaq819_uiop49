@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
@@ -97,7 +97,7 @@ function Hero() {
   )
 }
 
-function ProductCard({ title, price }) {
+function ProductCard({ title, price, description }) {
   return (
     <div className="group rounded-2xl p-4 bg-white shadow-lg border border-red-100 hover:shadow-rose-300/40 transition">
       <div className="h-36 rounded-xl bg-gradient-to-br from-rose-100 via-white to-emerald-100 border border-rose-100 relative overflow-hidden">
@@ -109,37 +109,213 @@ function ProductCard({ title, price }) {
       </div>
       <div className="mt-4">
         <h3 className="font-semibold text-slate-800">{title}</h3>
-        <p className="text-rose-600 font-bold">R$ {price}</p>
+        {description && <p className="text-sm text-slate-500 line-clamp-2">{description}</p>}
+        <p className="text-rose-600 font-bold mt-1">R$ {Number(price).toFixed(2)}</p>
         <button className="mt-3 w-full rounded-xl bg-rose-600 text-white py-2 font-medium hover:bg-rose-700 transition">Comprar</button>
       </div>
     </div>
   )
 }
 
-function Products() {
-  const items = [
-    { title: 'Boneco fofo com gorro', price: '59,90' },
-    { title: 'Árvore 3D mini', price: '79,90' },
-    { title: 'Kit enfeites redondos', price: '39,90' },
-    { title: 'Bengalas doces', price: '19,90' },
-    { title: 'Meias natalinas', price: '29,90' },
-    { title: 'Estrelas douradas', price: '24,90' },
-  ]
+function Products({ onManage }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/products`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Erro ao carregar produtos')
+      setItems(data)
+    } catch (e) {
+      setItems([
+        { id: 'demo1', title: 'Boneco fofo com gorro', price: 59.9, description: 'Companheiro natalino em estilo clay.' },
+        { id: 'demo2', title: 'Árvore 3D mini', price: 79.9, description: 'Decoração compacta e charmosa.' },
+        { id: 'demo3', title: 'Kit enfeites redondos', price: 39.9, description: 'Conjunto de bolas com acabamento soft.' },
+        { id: 'demo4', title: 'Bengalas doces', price: 19.9, description: 'Clássico para completar sua decoração.' },
+        { id: 'demo5', title: 'Meias natalinas', price: 29.9, description: 'Para presentinhos e mimos.' },
+        { id: 'demo6', title: 'Estrelas douradas', price: 24.9, description: 'Brilho delicado para sua árvore.' },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
 
   return (
     <section id="produtos" className="relative bg-white py-16">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex items-end justify-between mb-8">
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Produtos em destaque</h2>
-          <a href="#" className="text-rose-600 font-medium hover:underline">Ver todos</a>
+          <button onClick={() => onManage?.()} className="text-rose-600 font-medium hover:underline">Área do lojista</button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {items.map((it, i) => (
-            <ProductCard key={i} {...it} />
-          ))}
-        </div>
+        {loading ? (
+          <p className="text-slate-600">Carregando...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {items.map((it) => (
+              <ProductCard key={it.id || it._id || it.title} {...it} />)
+            )}
+          </div>
+        )}
       </div>
     </section>
+  )
+}
+
+function AdminPanel({ open, onClose }) {
+  const [unlocked, setUnlocked] = useState(false)
+  const [code, setCode] = useState('')
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Geral', in_stock: true })
+  const [msg, setMsg] = useState(null)
+
+  const PASSCODE = 'natal2024'
+
+  const load = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${backendUrl}/api/products`)
+      const data = await res.json()
+      setItems(Array.isArray(data) ? data : [])
+    } catch (e) {
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { if (open && unlocked) load() }, [open, unlocked])
+
+  const startEdit = (item) => {
+    setEditing(item)
+    setForm({ title: item.title || '', description: item.description || '', price: item.price ?? '', category: item.category || 'Geral', in_stock: item.in_stock ?? true })
+  }
+
+  const resetForm = () => {
+    setEditing(null)
+    setForm({ title: '', description: '', price: '', category: 'Geral', in_stock: true })
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    setMsg(null)
+    const payload = { ...form, price: Number(form.price) }
+    try {
+      let res
+      if (editing?.id) {
+        res = await fetch(`${backendUrl}/api/products/${editing.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        })
+      } else {
+        res = await fetch(`${backendUrl}/api/products`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        })
+      }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Erro ao salvar')
+      setMsg({ type: 'success', text: 'Salvo com sucesso' })
+      await load()
+      resetForm()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    }
+  }
+
+  const removeItem = async (id) => {
+    if (!confirm('Remover este produto?')) return
+    try {
+      const res = await fetch(`${backendUrl}/api/products/${id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.detail || 'Erro ao remover')
+      await load()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative w-full md:w-[900px] max-h-[90vh] overflow-auto rounded-t-2xl md:rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold">Área do lojista</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">Fechar</button>
+        </div>
+
+        {!unlocked ? (
+          <div className="mt-6 flex items-center gap-3">
+            <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Digite a chave" className="w-full md:w-64 rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+            <button onClick={()=> setUnlocked(code === PASSCODE)} className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">Entrar</button>
+            {code && code !== PASSCODE && <span className="text-sm text-rose-600">Chave incorreta</span>}
+          </div>
+        ) : (
+          <div className="mt-6 grid md:grid-cols-2 gap-6">
+            <form onSubmit={save} className="border border-rose-100 rounded-xl p-4">
+              <h4 className="font-semibold mb-3">{editing ? 'Editar produto' : 'Novo produto'}</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Título</label>
+                  <input value={form.title} onChange={e=>setForm(f=>({...f, title: e.target.value}))} required className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Descrição</label>
+                  <textarea rows="3" value={form.description} onChange={e=>setForm(f=>({...f, description: e.target.value}))} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700">Preço (R$)</label>
+                    <input type="number" step="0.01" value={form.price} onChange={e=>setForm(f=>({...f, price: e.target.value}))} required className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700">Categoria</label>
+                    <input value={form.category} onChange={e=>setForm(f=>({...f, category: e.target.value}))} className="mt-1 w-full rounded-xl border-slate-200 focus:border-rose-400 focus:ring-rose-400" />
+                  </div>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={form.in_stock} onChange={e=>setForm(f=>({...f, in_stock: e.target.checked}))} />
+                  Em estoque
+                </label>
+                <div className="flex gap-3">
+                  <button className="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium">{editing ? 'Salvar alterações' : 'Adicionar'}</button>
+                  {editing && <button type="button" onClick={resetForm} className="px-4 py-2 rounded-xl border border-slate-200">Cancelar</button>}
+                </div>
+                {msg && <p className={`text-sm ${msg.type==='success'?'text-emerald-600':'text-rose-600'}`}>{msg.text}</p>}
+              </div>
+            </form>
+
+            <div className="border border-rose-100 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold">Seus produtos</h4>
+                <button onClick={load} className="text-sm text-rose-600 hover:underline">Atualizar</button>
+              </div>
+              {loading ? <p className="text-slate-600">Carregando...</p> : (
+                <ul className="divide-y">
+                  {items.map((it)=> (
+                    <li key={it.id} className="py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-slate-800">{it.title}</p>
+                        <p className="text-sm text-slate-500">R$ {Number(it.price).toFixed(2)} • {it.category || 'Geral'} {it.in_stock ? '' : '• (fora de estoque)'}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={()=>startEdit(it)} className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm">Editar</button>
+                        <button onClick={()=>removeItem(it.id)} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm">Excluir</button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -241,12 +417,14 @@ function Footer() {
 }
 
 function App() {
+  const [adminOpen, setAdminOpen] = useState(false)
   return (
     <div className="min-h-screen bg-slate-900">
       <Hero />
-      <Products />
+      <Products onManage={() => setAdminOpen(true)} />
       <Contact />
       <Footer />
+      <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   )
 }
